@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stacy, de Station 24 Fitness</title>
+<style>
+@font-face{font-family:'Archivo';src:url('fonts/archivo-var.woff2') format('woff2');font-weight:100 900;font-stretch:62% 125%;font-display:swap}
+@font-face{font-family:'Syne';src:url('fonts/syne-800.woff2') format('woff2');font-weight:800;font-display:swap}
+:root{--o:#E45604;--o2:#FF7A2E;--card:#141414;--line:#2A2A2A;--g1:#D6D6D6;--g2:#9A9A9A;--ok:#3DDC84}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#000;overflow:hidden}
+html{color:var(--g1);font-family:'Archivo',system-ui,sans-serif;font-size:18px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--o2);outline-offset:4px;border-radius:6px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.top{position:absolute;top:0;left:0;right:0;z-index:8;display:flex;align-items:center;padding:26px 5vw;pointer-events:none}
+.top img{width:120px;height:auto;display:block}
+
+.hero{position:relative;height:100vh;height:100svh;overflow:hidden}
+#orb{position:absolute;inset:0;width:100%;height:100%;display:block}
+.orb-hit{position:absolute;border-radius:50%;background:transparent;border:0;cursor:pointer;z-index:3}
+
+/* Capacidades */
+.caps{list-style:none;position:absolute;inset:0;pointer-events:none;z-index:4}
+.caps li{position:absolute;left:0;top:0;opacity:0;will-change:transform,opacity}
+.cap{all:unset;position:relative;display:block;width:0;height:0;cursor:pointer;pointer-events:auto}
+.demo-on .cap{pointer-events:none}
+.dot{position:absolute;left:-8px;top:-8px;width:16px;height:16px;border-radius:50%;background:#000;border:2px solid var(--o);transition:background .3s,box-shadow .3s,transform .3s}
+.lbl{position:absolute;left:0;top:0;width:max-content;max-width:220px;
+  transform:translate(calc(-50% + var(--c,0) * 50% + var(--c,0) * 22px),-50%)}
+[data-side="-1"] .lbl{text-align:right}
+[data-side="1"] .lbl{text-align:left}
+.cap-t{display:block;color:#fff;font-weight:800;font-size:19px;font-stretch:104%;line-height:1.15}
+.cap-d{display:block;color:var(--g2);font-size:15px;font-stretch:90%;line-height:1.3;margin-top:3px}
+.cap:hover .dot,.cap.on .dot{background:var(--o);transform:scale(1.25);box-shadow:0 0 0 7px rgba(228,86,4,.16),0 0 26px rgba(228,86,4,.8)}
+.cap.on .cap-t,.cap:hover .cap-t{color:var(--o2)}
+.cap.on .cap-d,.cap:hover .cap-d{color:var(--g1)}
+.cap.on .lbl::after{content:'';position:absolute;left:0;right:0;bottom:-8px;height:2px;background:linear-gradient(90deg,transparent,var(--o2),transparent);animation:scan .9s cubic-bezier(.2,.8,.2,1) both}
+.cap:focus-visible .lbl{outline:2px solid var(--o2);outline-offset:6px;border-radius:6px}
+.invite .dot{animation:invite 2.8s ease-in-out infinite;animation-delay:calc(var(--i) * .25s)}
+@keyframes invite{0%,70%,100%{box-shadow:0 0 0 0 rgba(228,86,4,0)}20%{background:var(--o);box-shadow:0 0 0 8px rgba(228,86,4,.18),0 0 22px rgba(228,86,4,.8)}40%{background:#000}}
+@keyframes scan{from{transform:scaleX(0);opacity:1}to{transform:scaleX(1);opacity:.55}}
+
+/* Saludo y subtítulos */
+.hello{position:absolute;left:50%;bottom:6vh;transform:translateX(-50%);width:min(92vw,960px);text-align:center;z-index:4;transition:opacity .5s}
+.demo-on .hello{opacity:0;pointer-events:none}
+.stage{display:grid;align-items:end;justify-items:center;min-height:112px}
+.stage > *{grid-area:1/1}
+h1{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(40px,4.6vw,68px);white-space:nowrap;line-height:1;color:#fff;letter-spacing:-.02em;
+  opacity:0;transform:translateY(14px);filter:blur(10px);transition:opacity 1.1s,transform 1.1s cubic-bezier(.2,.8,.2,1),filter 1.1s,letter-spacing 1.1s,text-shadow .4s}
+.awake h1{opacity:1;transform:none;filter:none}
+h1.saying{text-shadow:0 0 28px rgba(228,86,4,.65)}
+.awake h1.gone{opacity:0;transform:translateY(-18px);filter:blur(12px);letter-spacing:.12em}
+.caption{max-width:760px;font-size:clamp(19px,1.6vw,24px);line-height:1.4;color:#fff;opacity:0;transition:opacity .5s}
+.caption.show{opacity:1}
+.caption .w{opacity:.14;transition:opacity .2s}
+.caption .w.in{opacity:1}
+.hint{margin-top:14px;color:var(--g2);font-size:17px;opacity:0;transition:opacity .6s}
+.hint.show{opacity:1}
+.hint.strong{color:#fff}
+.caps-m{display:none}
+.note{position:absolute;right:5vw;bottom:2.6vh;z-index:4;color:#5f5f5f;font-size:14px;text-align:right}
+
+/* Panel de demostración */
+.demo{position:absolute;z-index:6;top:104px;bottom:8vh;left:47%;right:5vw;max-width:760px;display:flex;flex-direction:column;
+  background:rgba(16,16,16,.92);border:1px solid var(--line);border-radius:22px;overflow:hidden;
+  opacity:0;transform:translateX(50px);clip-path:inset(0 0 0 100% round 22px);pointer-events:none;
+  transition:opacity .5s,transform .8s cubic-bezier(.2,.8,.2,1),clip-path .8s cubic-bezier(.2,.8,.2,1)}
+.demo-on .demo{opacity:1;transform:none;clip-path:inset(0 0 0 0 round 22px);pointer-events:auto;transition-delay:.25s}
+.demo::before,.demo::after{content:'';position:absolute;width:22px;height:22px;border:2px solid var(--o);pointer-events:none}
+.demo::before{top:10px;left:10px;border-right:0;border-bottom:0;border-radius:8px 0 0 0}
+.demo::after{bottom:10px;right:10px;border-left:0;border-top:0;border-radius:0 0 8px 0}
+.demo-top{display:flex;align-items:center;gap:16px;padding:20px 24px 16px 28px;border-bottom:1px solid var(--line)}
+.demo-id{flex:1;min-width:0}
+.demo-kind{display:block;color:var(--o2);font-size:15px;font-weight:700}
+.demo-title{display:block;color:#fff;font-size:24px;font-weight:900;font-stretch:112%;line-height:1.15}
+.timer{font-variant-numeric:tabular-nums;color:var(--g1);font-size:18px;font-weight:700}
+.close{background:transparent;color:#fff;border:2px solid var(--o);border-radius:999px;padding:9px 18px;font-size:15px;font-weight:800;cursor:pointer}
+.close:hover{background:var(--o);color:#000}
+.demo-body{flex:1;min-height:0;position:relative;display:flex;flex-direction:column}
+.prog{height:3px;background:#1f1f1f}
+.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--o),var(--o2));transition:width .5s}
+
+/* Llamada */
+.transcript{flex:1;overflow-y:auto;padding:24px 26px 30px;display:flex;flex-direction:column;gap:14px;scrollbar-width:thin;scrollbar-color:#333 transparent}
+.transcript > *{flex-shrink:0}
+.l-socio{align-self:flex-end;max-width:78%;background:#232323;border-radius:18px 18px 4px 18px;padding:11px 16px;color:var(--g1);animation:pop .35s ease both}
+.l-socio.talking{background:#2c2c2c}
+.l-socio.talking::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--o2);margin-right:9px;vertical-align:1px;animation:blink 1s infinite}
+.l-stacy{align-self:flex-start;max-width:86%;color:#fff;font-size:19px;padding:1px 0 1px 16px;border-left:3px solid var(--o);animation:pop .35s ease both}
+.l-stacy .w{opacity:0;transition:opacity .18s}
+.l-stacy .w.in{opacity:1}
+.l-sys{align-self:flex-start;display:flex;align-items:center;gap:10px;font-size:15px;color:var(--o2);font-stretch:92%;padding-left:19px;animation:pop .35s ease both}
+.l-sys.done{color:var(--g1)}
+.spin{width:14px;height:14px;border-radius:50%;border:2px solid rgba(228,86,4,.3);border-top-color:var(--o);animation:rot .8s linear infinite;flex:none}
+.l-sys svg{width:16px;height:16px;flex:none}
+.l-card{align-self:flex-start;margin-left:19px;width:min(360px,82%);border:1px solid rgba(228,86,4,.75);border-radius:14px;padding:14px 18px;background:linear-gradient(135deg,rgba(228,86,4,.12),rgba(228,86,4,.02));position:relative;overflow:hidden;animation:cardIn .6s cubic-bezier(.2,.8,.2,1) both}
+.l-card::after{content:'';position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,160,90,.22) 50%,transparent 70%);transform:translateX(-110%);animation:sweep 1.3s .25s ease-out both}
+.l-card b{display:block;color:#fff;font-size:17px;font-weight:800}
+.l-card .pr{color:var(--o2);font-size:32px;font-weight:900;font-stretch:112%;line-height:1.1;margin-top:2px}
+.l-card .pr small{font-size:15px;color:var(--g2);font-weight:500;font-stretch:100%;margin-left:6px}
+.l-card ul{list-style:none;margin-top:8px}
+.l-card li{font-size:15px;color:var(--g1);padding-left:14px;position:relative;line-height:1.35;margin-top:4px}
+.l-card li::before{content:'';position:absolute;left:0;top:.5em;width:6px;height:6px;border-radius:50%;background:var(--o)}
+
+/* Chat */
+.chat-body{flex:1;overflow-y:auto;padding:22px 22px;display:flex;flex-direction:column;gap:8px}
+.chat-body > *{flex-shrink:0}
+.chat-head{display:flex;align-items:center;gap:12px;padding:14px 22px;border-bottom:1px solid var(--line);background:#121212}
+.avatar{width:40px;height:40px;border-radius:50%;flex:none;display:grid;place-items:center;background:radial-gradient(circle at 38% 34%,#1d1d1d,#000 70%);box-shadow:0 0 0 3px rgba(228,86,4,.9),0 0 18px 4px rgba(228,86,4,.55)}
+.avatar svg{width:21px;height:auto;overflow:visible}
+.avatar path{fill:none;stroke:#FF9C5E;stroke-width:5;stroke-linejoin:round;filter:drop-shadow(0 0 3px #E45604)}
+.chat-head b{display:block;color:#fff;font-size:17px;line-height:1.1}
+.chat-head span{display:block;color:var(--ok);font-size:15px}
+.msg{max-width:78%;padding:10px 14px;border-radius:16px;font-size:17px;line-height:1.35;animation:pop .3s ease both}
+.msg.in{align-self:flex-start;background:#1f1f1f;color:#fff;border-top-left-radius:4px}
+.msg.out{align-self:flex-end;background:var(--o);color:#000;border-top-right-radius:4px;font-weight:500}
+.typing{align-self:flex-start;background:#1f1f1f;border-radius:16px;border-top-left-radius:4px;padding:14px 16px;display:flex;gap:5px}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--g2);animation:blink 1.1s infinite}
+.typing i:nth-child(2){animation-delay:.18s}.typing i:nth-child(3){animation-delay:.36s}
+.paycard{margin-top:8px;border-left:3px solid var(--o);background:#111;border-radius:10px;padding:12px 14px}
+.paycard b{display:block;color:#fff}
+.paycard span{display:block;color:var(--g2);font-size:15px}
+.paycard em{display:inline-block;margin-top:10px;font-style:normal;background:var(--o);color:#000;font-weight:800;border-radius:999px;padding:6px 16px;font-size:15px}
+
+/* Training */
+.tr{flex:1;overflow-y:auto;padding:24px 28px;display:flex;flex-direction:column;gap:18px}
+.tr > *{flex-shrink:0}
+.tr-intro{display:flex;gap:20px;align-items:center;animation:pop .5s ease both}
+.logo-slot{width:120px;aspect-ratio:1;border:2px dashed #3a3a3a;border-radius:18px;display:grid;place-items:center;text-align:center;color:var(--g2);font-size:14px;padding:10px;flex:none}
+.tr-intro p{color:var(--g1);font-size:18px}
+.tr-intro strong{color:#fff}
+.ask-box{display:flex;align-items:center;gap:12px;border:2px solid var(--o);border-radius:16px;padding:15px 18px;color:#fff;font-size:19px;min-height:60px;animation:pop .5s .2s ease both}
+.caret{display:inline-block;width:2px;height:1.1em;background:var(--o2);vertical-align:-3px;margin-left:2px;animation:blink 1s steps(1) infinite}
+.tr .l-stacy{animation:pop .4s ease both}
+.tag{align-self:flex-start;border:1px dashed var(--o);color:var(--o2);border-radius:999px;padding:4px 12px;font-size:15px;animation:pop .4s ease both}
+
+@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes rot{to{transform:rotate(360deg)}}
+@keyframes blink{0%,60%,100%{opacity:.25}30%{opacity:1}}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes sweep{to{transform:translateX(110%)}}
+
+/* Móvil: todo en una pantalla */
+@media (max-width:819px){
+  .top{padding:18px 20px}
+  .top img{width:120px}
+  .caps{display:none}
+  .hello{position:absolute;left:0;right:0;transform:none;width:auto;bottom:auto;top:340px;padding:0 20px}
+  .stage{min-height:92px}
+  h1{font-size:40px;white-space:normal}
+  .hint{font-size:16px;margin-top:10px}
+  .caps-m{display:grid;list-style:none;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px;text-align:left}
+  .caps-m button{all:unset;box-sizing:border-box;width:100%;height:100%;cursor:pointer;display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#0d0d0d}
+  .caps-m .dot{position:static;flex:none;width:12px;height:12px}
+  .caps-m .cap-t{font-size:15px}
+  .caps-m .on .dot{background:var(--o);box-shadow:0 0 18px rgba(228,86,4,.8)}
+  .caps-m .on .cap-t{color:var(--o2)}
+  .demo{left:12px;right:12px;top:220px;bottom:12px;max-width:none}
+  .demo-top{padding:16px 16px 12px 22px}
+  .demo-title{font-size:20px}
+  .timer{display:none}
+  .transcript{padding:18px 16px}
+  .note{left:20px;right:20px;text-align:center;bottom:10px;font-size:13px}
+  .demo-on .note{opacity:0}
+}
+@media (max-width:819px) and (max-height:740px){
+  .hello{top:300px}
+  .caps-m{gap:8px;margin-top:14px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;transition-delay:0ms!important}
+}
+</style>
+</head>
+<body>
+<header class="top"><img alt="STATION" src="data:image/png;base64,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"></header>
+
+<main class="hero" id="hero">
+  <canvas id="orb" aria-hidden="true"></canvas>
+  <button class="orb-hit" id="orbHit" type="button" aria-label="Escuchar a Stacy presentarse"></button>
+  <ul class="caps" id="caps" aria-label="Habilidades de Stacy"></ul>
+
+  <div class="hello">
+    <div class="stage">
+      <h1 id="h1">Hola, soy Stacy</h1>
+      <p class="caption" id="caption" aria-live="polite"></p>
+    </div>
+    <p class="hint" id="hint">Toca el círculo para escucharme.</p>
+    <ul class="caps-m" id="capsM" aria-label="Habilidades de Stacy"></ul>
+  </div>
+
+  <section class="demo" id="demo" aria-live="polite" aria-label="Demostración">
+    <div class="demo-top">
+      <div class="demo-id"><span class="demo-kind" id="demoKind"></span><span class="demo-title" id="demoTitle"></span></div>
+      <span class="timer" id="timer"></span>
+      <button class="close" id="close" type="button">Volver</button>
+    </div>
+    <div class="demo-body" id="demoBody"></div>
+    <div class="prog"><i id="prog"></i></div>
+  </section>
+
+  <p class="note">Demostración con personas y datos ficticios. Me entrena Alfred.</p>
+</main>
+
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const SD = 'M26 0 L100 0 L76.5 18.8 L28 18.8 A4.75 4.75 0 0 0 28 28.3 L73.5 28.3 A21.7 21.7 0 0 1 73.5 71.7 L0 71.7 L23.5 53 L72 53 A4.85 4.85 0 0 0 72 43.3 L26 43.3 A21.65 21.65 0 0 1 26 0 Z';
+
+/* =========================================================
+   ORBE DE STACY (núcleo, aureola, S en neón e íconos)
+   ========================================================= */
+const SPATH = new Path2D('M26 0 L100 0 L76.5 18.8 L28 18.8 A4.75 4.75 0 0 0 28 28.3 L73.5 28.3 A21.7 21.7 0 0 1 73.5 71.7 L0 71.7 L23.5 53 L72 53 A4.85 4.85 0 0 0 72 43.3 L26 43.3 A21.65 21.65 0 0 1 26 0 Z'); // S de STATION en neón (100 × 71.7)
+// Íconos que Stacy muestra en el círculo mientras habla de cada capacidad (24 × 24)
+const ICONS = {
+  phone: 'M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z',
+  dudas: 'M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-9l-5 4v-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z M9.6 8.6a2.4 2.4 0 1 1 3.4 2.2c-.6.3-1 .8-1 1.4v.4 M12 14.8h.01',
+  estatus: 'M6 11h12v10H6Z M8.5 11V8a3.5 3.5 0 0 1 7 0v3 M12 15v2.5',
+  pago: 'M3 6h18v12H3Z M3 10h18 M7 14.5h4',
+  inscripcion: 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z M2 21a7 7 0 0 1 14 0 M19 8v6 M16 11h6',
+  prospectos: 'M9 3h6v3H9Z M7 4.5H5V21h14V4.5h-2 M8.5 11h7 M8.5 15h5',
+  whatsapp: 'M12 3.5a8.5 8.5 0 1 1-4.3 15.8L3 20.5l1.3-4.4A8.5 8.5 0 0 1 12 3.5Z M8.5 12h.01 M12 12h.01 M15.5 12h.01',
+  training: 'M2 9l10-5 10 5-10 5Z M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5 M22 9v6'
+};
+const MARKS = { s: { path: SPATH, w: 100, h: 71.7, scale: 1.02, lw: 1 } };
+for (const k in ICONS) MARKS[k] = { path: new Path2D(ICONS[k]), w: 24, h: 24, scale: 0.92, lw: 1.15 };
+function setMark(o, key) { o.mark = key; if (!(key in o.marks)) o.marks[key] = 0; }
+const AUDIO_URL = 'audio/stacy-intro.mp3';
+
+/* =========================================================
+   ORBE DE STACY
+   glow: qué tan encendida está (0-1)  ·  amp: intensidad de voz (0-1)
+   ========================================================= */
+const orbs = [];
+function makeOrb(canvas, awake) {
+  const o = { canvas, ctx: canvas.getContext('2d'), glow: awake ? 1 : 0, amp: 0, speaking: false,
+              ripples: [], lastRipple: 0, wakeStart: null, awake: !!awake, geom: null, visible: true, level: null, before: null, mark: 's', marks: { s: 1 } };
+  o.resize = () => {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    o.w = canvas.clientWidth; o.h = canvas.clientHeight; o.dpr = dpr;
+    canvas.width = Math.round(o.w * dpr); canvas.height = Math.round(o.h * dpr);
+    if (o.autoGeom) o.geom = { cx: o.w / 2, cy: o.h / 2, R: Math.min(o.w, o.h) * o.autoGeom };
+  };
+  orbs.push(o); return o;
+}
+
+function wakeCurve(ms) {
+  if (ms < 350) return 0;
+  if (ms < 900) { const f = (ms - 350) / 550; return 0.05 + 0.07 * Math.sin(f * Math.PI * 5) ** 2; }
+  const spike = (f, h) => h * Math.exp(-f * 5) * Math.min(1, f / 0.06);
+  if (ms < 1300) return 0.07 + spike((ms - 900) / 400, 0.32);
+  if (ms < 1700) return 0.10 + spike((ms - 1300) / 400, 0.48);
+  if (ms < 3000) { const f = (ms - 1700) / 1300, c1 = 1.5, c3 = c1 + 1;
+    return 0.12 + 0.88 * (1 + c3 * (f - 1) ** 3 + c1 * (f - 1) ** 2); }
+  return 1;
+}
+
+function blob(ctx, cx, cy, r, t, a) {
+  ctx.beginPath();
+  const N = 110;
+  for (let i = 0; i <= N; i++) {
+    const th = i / N * Math.PI * 2;
+    const d = (0.010 + 0.055 * a) * Math.sin(3 * th + t * 0.0009)
+            + (0.007 + 0.038 * a) * Math.sin(5 * th - t * 0.0014)
+            + (0.004 + 0.028 * a) * Math.sin(7 * th + t * 0.0022)
+            + 0.008 * Math.sin(2 * th + t * 0.0005);
+    const x = cx + Math.cos(th) * r * (1 + d), y = cy + Math.sin(th) * r * (1 + d);
+    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+  }
+  ctx.closePath();
+}
+
+function drawOrb(o, t) {
+  const { ctx, dpr, geom } = o; if (!geom) return;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, o.w, o.h);
+  if (o.before) o.before(ctx, t);
+  const { cx, cy, R } = geom, G = Math.max(0, o.glow), A = o.amp;
+  let g = ctx.createRadialGradient(cx, cy, R * 0.6, cx, cy, R * (2.9 + 0.9 * A));
+  g.addColorStop(0, `rgba(228,86,4,${0.30 * G + 0.18 * A})`);
+  g.addColorStop(0.35, `rgba(228,86,4,${0.11 * G + 0.08 * A})`);
+  g.addColorStop(1, 'rgba(228,86,4,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R * (3.8 + A), 0, 7); ctx.fill();
+  o.ripples = o.ripples.filter(r => t - r.t < 1800);
+  ctx.lineWidth = 1.2;
+  for (const r of o.ripples) {
+    const p = (t - r.t) / 1800;
+    ctx.strokeStyle = `rgba(255,122,46,${(1 - p) * 0.55 * r.s})`;
+    ctx.beginPath(); ctx.arc(cx, cy, R * (1.2 + p * 1.6), 0, 7); ctx.stroke();
+  }
+  g = ctx.createRadialGradient(cx, cy, R * 0.92, cx, cy, R * (1.34 + 0.2 * A));
+  g.addColorStop(0, `rgba(255,150,70,${Math.min(1, 0.95 * G + 0.1 * A)})`);
+  g.addColorStop(0.35, `rgba(228,86,4,${0.75 * G})`);
+  g.addColorStop(1, 'rgba(228,86,4,0)');
+  ctx.fillStyle = g; blob(ctx, cx, cy, R * (1.32 + 0.18 * A), t, A); ctx.fill();
+  g = ctx.createRadialGradient(cx - R * 0.3, cy - R * 0.35, R * 0.08, cx, cy, R);
+  g.addColorStop(0, '#1d1d1d'); g.addColorStop(0.7, '#070707'); g.addColorStop(1, '#000');
+  ctx.fillStyle = g; blob(ctx, cx, cy, R, t * 0.8, A * 0.4); ctx.fill();
+  g = ctx.createRadialGradient(cx, cy, R * 0.5, cx, cy, R);
+  g.addColorStop(0, 'rgba(228,86,4,0)'); g.addColorStop(1, `rgba(228,86,4,${0.26 * G + 0.32 * A})`);
+  ctx.fillStyle = g; ctx.fill();
+  ctx.strokeStyle = `rgba(255,170,110,${0.5 * G + 0.35 * A})`; ctx.lineWidth = 1.4; ctx.stroke();
+  // La S de STATION (o el ícono de la capacidad) en neón dentro del círculo
+  const vis = Math.min(1, Math.max(0, (G - 0.06) / 0.5));
+  for (const key in o.marks) {
+    o.marks[key] += ((key === o.mark ? 1 : 0) - o.marks[key]) * 0.14;
+    if (key !== o.mark && o.marks[key] < 0.01) { delete o.marks[key]; continue; }
+    const m = MARKS[key], a = o.marks[key] * vis;
+    if (a <= 0.01) continue;
+    const pop = 0.82 + 0.18 * o.marks[key];
+    const sw = R * m.scale * pop * (1 + 0.04 * A), k = sw / m.w, sh = m.h * k;
+    ctx.save();
+    ctx.translate(cx - sw / 2, cy - sh / 2); ctx.scale(k, k);
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.globalAlpha = a;
+    ctx.shadowColor = 'rgba(228,86,4,1)';
+    ctx.shadowBlur = R * (0.22 + 0.4 * A);
+    ctx.strokeStyle = `rgba(228,86,4,${0.55 + 0.35 * A})`; ctx.lineWidth = Math.max(2.4, R * 0.05) * m.lw / k; ctx.stroke(m.path);
+    ctx.shadowBlur = R * (0.07 + 0.15 * A);
+    ctx.strokeStyle = '#FF9C5E'; ctx.lineWidth = Math.max(1.2, R * 0.022) * m.lw / k; ctx.stroke(m.path);
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = a * (0.35 + 0.65 * A);
+    ctx.strokeStyle = '#FFE3D1'; ctx.lineWidth = Math.max(0.6, R * 0.009) * m.lw / k; ctx.stroke(m.path);
+    ctx.restore();
+  }
+}
+
+function loop(t) {
+  for (const o of orbs) {
+    if (!o.visible || !o.geom) continue;
+    if (o.wakeStart != null && !o.awake) {
+      const ms = t - o.wakeStart; o.glow = wakeCurve(ms);
+      if (ms >= 3000) o.awake = true;
+    }
+    if (o.awake) o.glow = RM ? 1 : 1 + 0.05 * Math.sin(t * 0.0012);
+    let target = 0;
+    const lv = o.level ? o.level() : null;
+    if (lv != null) target = lv;
+    else if (o.speaking) {
+      const n = Math.abs(Math.sin(t * 0.019) * 0.6 + Math.sin(t * 0.031 + 1.3) * 0.4) * (0.75 + 0.25 * Math.sin(t * 0.007));
+      target = 0.2 + 0.8 * n;
+    }
+    o.amp += (target - o.amp) * (target > o.amp ? 0.35 : 0.12);
+    if (!RM && o.amp > 0.62 && t - o.lastRipple > 320) { o.ripples.push({ t, s: o.amp }); o.lastRipple = t; }
+    drawOrb(o, t);
+  }
+  requestAnimationFrame(loop);
+}
+
+
+const wait = (ms, tok, ref) => new Promise(r => setTimeout(() => r(ref.v === tok), ms));
+const lerp = (a, b, k) => a + (b - a) * k;
+const ease = k => k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+
+/* =========================================================
+   MENÚ: habilidades conectadas al anillo
+   ========================================================= */
+const CAPS = [
+  { id: 'dudas', t: 'Dudas e informes', d: 'Por teléfono 24/7, sobre planes y servicios', kind: 'call', sc: 'informes' },
+  { id: 'estatus', t: 'Estatus de tu cuenta', d: 'Y el motivo si tu acceso está bloqueado', kind: 'call', sc: 'bloqueo' },
+  { id: 'pago', t: 'Link de pago', d: 'Para liberar o renovar tu acceso', kind: 'call', sc: 'renovacion' },
+  { id: 'inscripcion', t: 'Inscripción', d: 'Socios nuevos, con su link de pago', kind: 'call', sc: 'inscripcion' },
+  { id: 'prospectos', t: 'Prospectos', d: 'Registro de quien quiere conocernos', kind: 'call', sc: 'prospecto' },
+  { id: 'whatsapp', t: 'WhatsApp', d: 'La misma atención, por chat', kind: 'chat' },
+  { id: 'training', t: 'Training STATIONers', d: 'Guía para el equipo, con EvoSchool', kind: 'training' }
+];
+const hero = $('#hero'), capsEl = $('#caps'), caption = $('#caption'), h1 = $('#h1'), hint = $('#hint');
+const capInner = c => `<span class="dot"></span><span class="lbl"><span class="cap-t">${c.t}</span><span class="cap-d">${c.d}</span></span>`;
+capsEl.innerHTML = CAPS.map((c, i) => `<li data-id="${c.id}" style="--i:${i}"><button class="cap" type="button" data-id="${c.id}">${capInner(c)}</button></li>`).join('');
+$('#capsM').innerHTML = CAPS.map((c, i) => `<li data-id="${c.id}" style="--i:${i}"><button type="button" data-id="${c.id}"><span class="dot"></span><span class="cap-t">${c.t}</span></button></li>`).join('');
+const nodes = [...capsEl.children].map((li, i) => ({ li, btn: li.firstElementChild, id: CAPS[i].id }));
+
+const heroOrb = makeOrb($('#orb'));
+const orbit = { hover: null, deploy: null, last: 0, rot: 0, gap: 120, spacing: 90, burst: { id: null, t: 0 }, m: 0, target: 0, menu: null, demo: null, panelX: 0 };
+let active = null, wide = true;
+
+function layout() {
+  heroOrb.resize();
+  const w = hero.clientWidth, h = hero.clientHeight;
+  wide = w >= 820;
+  if (wide) {
+    const reserve = h * 0.06 + 112 + 44;
+    const cy = (h - reserve + 70) / 2;
+    const room = Math.min(cy - 80, (h - reserve - 10) - cy);
+    const R = Math.max(54, Math.min(104, Math.min(w, h) * 0.105, room / 2.45));
+    orbit.menu = { cx: w / 2, cy, R };
+    orbit.gap = Math.max(70, Math.min(150, w * 0.08));
+    orbit.spacing = Math.max(70, Math.min(96, h * 0.105));
+    const panelLeft = w * 0.47;
+    const dR = Math.max(48, Math.min(R, panelLeft / 2 / 2.6));
+    orbit.demo = { cx: panelLeft / 2, cy: h / 2 + 10, R: dR };
+    orbit.panelX = panelLeft;
+  } else {
+    const R = Math.min(56, (h - 0) * 0.07);
+    orbit.menu = { cx: w / 2, cy: Math.min(205, h * 0.25), R };
+    orbit.demo = { cx: w / 2, cy: 128, R: 36 };
+    orbit.panelX = 0;
+  }
+  applyGeom();
+}
+function applyGeom() {
+  const k = ease(orbit.m), a = orbit.menu, b = orbit.demo;
+  if (!a) return;
+  const g = heroOrb.geom || (heroOrb.geom = {});
+  g.cx = lerp(a.cx, b.cx, k); g.cy = lerp(a.cy, b.cy, k); g.R = lerp(a.R, b.R, k);
+  Object.assign($('#orbHit').style, { left: g.cx - g.R * 1.4 + 'px', top: g.cy - g.R * 1.4 + 'px', width: g.R * 2.8 + 'px', height: g.R * 2.8 + 'px' });
+}
+
+/* Anillos HUD y trazos */
+const arcs = (ctx, cx, cy, r, segs, rot) => segs.forEach(([a, b]) => { ctx.beginPath(); ctx.arc(cx, cy, r, a + rot, b + rot); ctx.stroke(); });
+
+// Anillos tipo HUD alrededor de Stacy
+function drawHud(ctx, cx, cy, R, t, hud, A) {
+  ctx.save();
+  ctx.globalAlpha = hud;
+  ctx.lineCap = 'butt';
+  const r = orbit.rot;
+  ctx.strokeStyle = `rgba(228,86,4,${0.22 + 0.2 * A})`; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(cx, cy, R * 1.58, 0, 7); ctx.stroke();
+  ctx.strokeStyle = `rgba(228,86,4,${0.55 + 0.4 * A})`; ctx.lineWidth = Math.max(4, R * 0.07);
+  arcs(ctx, cx, cy, R * 1.8, [[0, 0.9], [1.25, 1.85], [2.5, 4.05], [4.5, 5.15], [5.5, 5.75]], r);
+  ctx.strokeStyle = `rgba(255,122,46,${0.3 + 0.3 * A})`; ctx.lineWidth = 1;
+  const tr = -r * 0.6;
+  for (let k = 0; k < 96; k++) {
+    const a = tr + k * Math.PI * 2 / 96, L = k % 8 === 0 ? R * 0.11 : R * 0.045;
+    const c = Math.cos(a), s = Math.sin(a), r0 = R * 1.98;
+    ctx.beginPath(); ctx.moveTo(cx + c * r0, cy + s * r0); ctx.lineTo(cx + c * (r0 + L), cy + s * (r0 + L)); ctx.stroke();
+  }
+  ctx.strokeStyle = `rgba(228,86,4,${0.6 + 0.3 * A})`; ctx.lineWidth = 1.4;
+  arcs(ctx, cx, cy, R * 2.22, [[0.15, 1.35], [1.75, 2.55], [3.3, 4.6], [5.0, 5.95]], r * 0.45);
+  ctx.strokeStyle = `rgba(255,150,80,${0.8})`; ctx.lineWidth = 4;
+  arcs(ctx, cx, cy, R * 2.22, [[1.4, 1.62], [4.66, 4.9]], r * 0.45);
+  ctx.strokeStyle = 'rgba(255,255,255,0.10)'; ctx.lineWidth = 1; ctx.setLineDash([2, 7]);
+  ctx.beginPath(); ctx.arc(cx, cy, R * 2.42, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+  ctx.restore();
+}
+
+// Recorre una polilínea hasta la fracción f; devuelve el punto final
+function polyTo(ctx, pts, f) {
+  let total = 0; const seg = [];
+  for (let i = 1; i < pts.length; i++) { const l = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); seg.push(l); total += l; }
+  let left = total * f, end = pts[0];
+  ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length && left > 0; i++) {
+    const k = Math.min(1, left / seg[i - 1]);
+    end = [pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * k, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * k];
+    ctx.lineTo(end[0], end[1]); left -= seg[i - 1];
+  }
+  return end;
+}
+function pointAt(pts, f) {
+  let total = 0; const seg = [];
+  for (let i = 1; i < pts.length; i++) { const l = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); seg.push(l); total += l; }
+  let left = total * f;
+  for (let i = 1; i < pts.length; i++) {
+    if (left <= seg[i - 1]) { const k = left / seg[i - 1]; return [pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * k, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * k]; }
+    left -= seg[i - 1];
+  }
+  return pts[pts.length - 1];
+}
+
+
+const LEFT = 4;
+heroOrb.before = (ctx, t) => {
+  const dt = orbit.last ? Math.min(50, t - orbit.last) : 16; orbit.last = t;
+  if (orbit.m !== orbit.target) {
+    const step = dt / (RM ? 1 : 900);
+    orbit.m = orbit.target > orbit.m ? Math.min(orbit.target, orbit.m + step) : Math.max(orbit.target, orbit.m - step);
+    applyGeom();
+  }
+  const A = heroOrb.amp, M = ease(orbit.m);
+  if (!RM) orbit.rot += dt * (0.00010 + 0.0006 * A);
+  const { cx, cy, R } = heroOrb.geom;
+  const hud = orbit.deploy == null ? 0 : RM ? 1 : Math.min(1, (t - orbit.deploy) / 900);
+  drawHud(ctx, cx, cy, R, t, hud, A);
+  const Rr = R * 2.22;
+  // En demostración: un trazo une a Stacy con el panel
+  if (wide && M > 0.05) {
+    const x0 = cx + Rr, x1 = orbit.panelX - 2, y = cy;
+    const len = Math.max(0, x1 - x0) * Math.min(1, M * 1.3);
+    ctx.save(); ctx.lineCap = 'round';
+    ctx.strokeStyle = `rgba(228,86,4,${0.7 * M})`; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x0 + len, y); ctx.stroke();
+    ctx.fillStyle = `rgba(255,156,94,${M})`; ctx.beginPath(); ctx.arc(x0, y, 3, 0, 7); ctx.fill();
+    if (!RM && M > 0.9) {
+      const sp = heroOrb.speaking || callStacy ? 0.0012 : 0.0004;
+      for (let k = 0; k < 3; k++) {
+        const p = (t * sp + k / 3) % 1;
+        ctx.fillStyle = `rgba(255,190,140,${Math.sin(p * Math.PI)})`;
+        ctx.beginPath(); ctx.arc(x0 + (x1 - x0) * p, y, 2.4, 0, 7); ctx.fill();
+      }
+    }
+    ctx.shadowColor = 'rgba(228,86,4,1)'; ctx.shadowBlur = 12;
+    ctx.strokeStyle = `rgba(255,150,80,${0.95 * M})`; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(cx, cy, Rr, -0.2, 0.2); ctx.stroke();
+    ctx.restore();
+  }
+  if (!wide) return;
+  const show = 1 - M;
+  nodes.forEach((nd, i) => {
+    const side = i < LEFT ? -1 : 1, j = i < LEFT ? i : i - LEFT, n = i < LEFT ? LEFT : nodes.length - LEFT;
+    const d0 = orbit.deploy == null ? 0 : RM ? 1 : Math.max(0, Math.min(1, (t - orbit.deploy - 300 - i * 140) / 1000));
+    const d = d0 * show;
+    const float = RM ? 0 : 3.5 * Math.sin(t * 0.0011 + i * 1.7);
+    const yL = cy + (j - (n - 1) / 2) * orbit.spacing + float;
+    const dotX = cx + side * (Rr + orbit.gap + 40);
+    const y0 = cy + (yL - cy) * 0.5;
+    const x0 = cx + side * Math.sqrt(Math.max(0, Rr * Rr - (y0 - cy) ** 2));
+    const dy = Math.abs(yL - y0);
+    const xd = dotX - side * 34;
+    const pts = [[x0, y0], [xd - side * dy, y0], [xd, yL], [dotX - side * 10, yL]];
+    nd.li.style.transform = `translate3d(${dotX.toFixed(1)}px,${yL.toFixed(1)}px,0)`;
+    nd.li.style.opacity = (Math.max(0, (d0 - 0.75) / 0.25) * show * show).toFixed(3);
+    nd.li.dataset.side = side;
+    nd.li.style.setProperty('--c', side);
+    if (d <= 0.001) return;
+    const on = nd.id === active || active === 'all' || nd.id === orbit.hover;
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.strokeStyle = on ? 'rgba(255,122,46,0.95)' : 'rgba(228,86,4,0.5)';
+    ctx.lineWidth = on ? 2 : 1.2;
+    polyTo(ctx, pts, d); ctx.stroke();
+    ctx.fillStyle = on ? '#FF9C5E' : 'rgba(228,86,4,0.9)';
+    ctx.beginPath(); ctx.arc(x0, y0, on ? 3.5 : 2.5, 0, 7); ctx.fill();
+    if (!RM && d === 1) {
+      const p = (t * (on ? 0.0010 : 0.0003) + i * 0.29) % 1;
+      const [px, py] = pointAt(pts, p);
+      ctx.fillStyle = `rgba(255,170,110,${Math.sin(p * Math.PI) * (on ? 1 : 0.8)})`;
+      ctx.beginPath(); ctx.arc(px, py, on ? 3 : 2.2, 0, 7); ctx.fill();
+    }
+    if (on && (nd.id === active || active === 'all') && show > 0.9) {
+      const ang = Math.atan2(y0 - cy, x0 - cx);
+      ctx.save(); ctx.lineCap = 'round';
+      ctx.shadowColor = 'rgba(228,86,4,1)'; ctx.shadowBlur = 12;
+      ctx.strokeStyle = 'rgba(255,150,80,0.95)'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(cx, cy, Rr, ang - 0.2, ang + 0.2); ctx.stroke();
+      ctx.restore();
+    }
+    const b = orbit.burst;
+    if (!RM && show > 0.9 && b.id && (b.id === nd.id || b.id === 'all')) {
+      const bt = t - b.t - (b.id === 'all' ? i * 90 : 0);
+      if (bt > 0 && bt < 1300) {
+        const q = Math.min(1, bt / 650);
+        ctx.strokeStyle = `rgba(255,140,60,${1 - q})`; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(x0, y0, 4 + 26 * q, 0, 7); ctx.stroke();
+        for (let k = 0; k < 3; k++) {
+          const p = (bt - k * 140) / 750;
+          if (p <= 0 || p >= 1) continue;
+          const [px, py] = pointAt(pts, p);
+          ctx.fillStyle = `rgba(255,200,150,${1 - p * 0.6})`;
+          ctx.beginPath(); ctx.arc(px, py, 3.4 - k * 0.6, 0, 7); ctx.fill();
+        }
+        const dq = Math.max(0, Math.min(1, (bt - 650) / 500));
+        if (dq > 0 && dq < 1) {
+          const [ex, ey] = pts[pts.length - 1];
+          ctx.strokeStyle = `rgba(255,140,60,${1 - dq})`; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.arc(ex + side * 10, ey, 8 + 18 * dq, 0, 7); ctx.stroke();
+        }
+      }
+    }
+  });
+};
+
+function highlight(id) {
+  if (id && id !== active) orbit.burst = { id, t: performance.now() };
+  active = id;
+  document.querySelectorAll('#caps li, #capsM li').forEach(li => li.firstElementChild.classList.toggle('on', id === 'all' || li.dataset.id === id));
+}
+function invite(on) { capsEl.classList.toggle('invite', on); $('#capsM').classList.toggle('invite', on); }
+
+[capsEl, $('#capsM')].forEach(el => el.addEventListener('click', e => { const b = e.target.closest('button'); if (b) openDemo(b.dataset.id); }));
+nodes.forEach(nd => {
+  nd.btn.addEventListener('mouseenter', () => orbit.hover = nd.id);
+  nd.btn.addEventListener('mouseleave', () => orbit.hover = null);
+  nd.btn.addEventListener('focus', () => orbit.hover = nd.id);
+  nd.btn.addEventListener('blur', () => orbit.hover = null);
+});
+
+/* =========================================================
+   AUDIO: contexto compartido y nivel de voz para el orbe
+   ========================================================= */
+let actx = null;
+function getCtx() {
+  if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { actx = null; } }
+  return actx;
+}
+function meter(el) {
+  const m = { an: null, buf: null, peak: 0 };
+  m.setup = () => {
+    if (m.an || !getCtx()) return;
+    try { const src = actx.createMediaElementSource(el); m.an = actx.createAnalyser(); m.an.fftSize = 512; src.connect(m.an); m.an.connect(actx.destination); m.buf = new Uint8Array(512); } catch (e) { m.an = null; }
+  };
+  m.level = () => {
+    if (!m.an || el.paused) return null;
+    m.an.getByteTimeDomainData(m.buf); let s = 0;
+    for (const v of m.buf) { const x = (v - 128) / 128; s += x * x; }
+    const lv = Math.min(1, Math.sqrt(s / m.buf.length) * 5);
+    m.peak = Math.max(m.peak, lv);
+    if (el.currentTime > 0.9 && m.peak === 0) return null;
+    return lv;
+  };
+  return m;
+}
+const audio = new Audio(AUDIO_URL); audio.preload = 'auto';
+const callAudio = new Audio(); callAudio.preload = 'auto';
+const introMeter = meter(audio), callMeter = meter(callAudio);
+let playing = false, callStacy = false;
+heroOrb.level = () => playing ? introMeter.level() : callStacy ? callMeter.level() : null;
+
+/* =========================================================
+   PRESENTACIÓN
+   ========================================================= */
+const INTRO = [
+  { a: 0.00, b: 1.15, t: 'Hola, soy Stacy.' },
+  { a: 1.45, b: 5.66, t: 'Estoy aprendiendo a atender a los socios de Station por teléfono, a cualquier hora del día.', ic: 'phone' },
+  { a: 6.05, b: 7.77, t: 'Resuelvo dudas y doy informes,', n: 'dudas' },
+  { a: 8.08, b: 10.82, t: 'reviso el estatus de tu cuenta o por qué está bloqueada,', n: 'estatus' },
+  { a: 11.13, b: 13.69, t: 'te envío tu link de pago para liberar tu acceso al momento,', n: 'pago' },
+  { a: 14.08, b: 15.42, t: 'inscribo a socios nuevos', n: 'inscripcion' },
+  { a: 15.55, b: 17.50, t: 'y registro a quien quiere conocernos.', n: 'prospectos' },
+  { a: 17.76, b: 19.20, t: 'También vas a encontrarme en WhatsApp.', n: 'whatsapp' },
+  { a: 19.50, b: 24.22, t: 'Y al equipo de Station lo guío en cada proceso con Training STATIONers, junto con EvoSchool.', n: 'training' },
+  { a: 24.50, b: 25.35, t: 'Me entrena Alfred.', n: 'all' }
+];
+const TOTAL = 25.7;
+let useAudio = true, t0 = 0, seg = -1, raf = 0, heard = false;
+const now = () => useAudio ? audio.currentTime : (performance.now() - t0) / 1000;
+
+function showSeg(i) {
+  seg = i;
+  const s = INTRO[i];
+  highlight(s.n || null);
+  setMark(heroOrb, s.ic || (s.n && s.n !== 'all' ? s.n : 's'));
+  if (i === 0) { h1.classList.remove('gone'); h1.classList.add('saying'); caption.classList.remove('show'); return; }
+  h1.classList.remove('saying'); h1.classList.add('gone');
+  caption.innerHTML = s.t.split(' ').map(w => `<span class="w">${w}</span>`).join(' ');
+  caption.classList.add('show');
+}
+function tick() {
+  if (!playing) return;
+  const ct = now();
+  let i = -1; for (let k = 0; k < INTRO.length; k++) if (ct >= INTRO[k].a) i = k;
+  if (i >= 0 && i !== seg) showSeg(i);
+  if (i > 0) {
+    const s = INTRO[i], ws = caption.querySelectorAll('.w');
+    const p = Math.max(0, Math.min(1, (ct - s.a) / (s.b - s.a)));
+    const cnt = Math.ceil(p * ws.length);
+    ws.forEach((w, k) => w.classList.toggle('in', k < cnt));
+  }
+  heroOrb.speaking = i >= 0 && ct <= INTRO[i].b;
+  if (ct >= TOTAL || (useAudio && audio.ended)) { heard = true; stopIntro(); return; }
+  raf = requestAnimationFrame(tick);
+}
+async function startIntro() {
+  if (mode === 'demo') return;
+  if (playing) { stopIntro(); return; }
+  playing = true; seg = -1; introMeter.peak = 0;
+  hint.classList.remove('show'); invite(false);
+  useAudio = true;
+  try {
+    introMeter.setup();
+    if (actx && actx.state === 'suspended') await actx.resume();
+    audio.currentTime = 0;
+    await audio.play();
+  } catch (e) { useAudio = false; t0 = performance.now(); }
+  tick();
+}
+function stopIntro(quiet) {
+  const was = playing;
+  playing = false; cancelAnimationFrame(raf);
+  try { audio.pause(); audio.currentTime = 0; } catch (e) {}
+  heroOrb.speaking = false;
+  if (seg > 0) h1.classList.add('gone');
+  h1.classList.remove('saying'); caption.classList.remove('show');
+  if (quiet) return;
+  highlight(null); setMark(heroOrb, 's');
+  if (was || heard) menuHint();
+}
+function menuHint() {
+  hint.textContent = heard ? 'Toca una habilidad para ver cómo la resuelvo.' : 'Toca el círculo para escucharme o elige una habilidad.';
+  hint.classList.toggle('strong', heard);
+  hint.classList.add('show');
+  invite(true);
+}
+$('#orbHit').addEventListener('click', startIntro);
+
+/* =========================================================
+   DEMOSTRACIONES (sin deslizar: se abren junto a Stacy)
+   ========================================================= */
+const SCENARIOS = [
+  { id: 'informes', title: 'Informes de planes', sub: 'Planes y promociones', lines: [
+    ['s', 'Hola, ¿qué planes manejan?', 'inf-s1'],
+    ['a', '¡Hola! Tenemos tres opciones. La primera es Premium 2: $699 al mes, con permanencia de 12 meses. Si domicilias tarjeta de crédito, tu primer mes es gratis y la inscripción va al 50%: empiezas pagando solo $249.', 'inf-a1'],
+    ['c', { t: 'Premium 2', p: '$699', u: 'al mes', n: ['Con tarjeta de crédito: primer mes gratis e inscripción al 50%, pagas $249', 'Con débito: $699 desde el primer mes', 'Permanencia de 12 meses'] }],
+    ['s', '¿Y si no quiero amarrarme un año?', 'inf-s2'],
+    ['a', 'Entonces te va mejor Premium Flex: $799 al mes, sin permanencia forzosa, y puedes cancelar cuando quieras. Ahorita tu primer mes es de $599, con cualquier tarjeta.', 'inf-a2'],
+    ['c', { t: 'Premium Flex', p: '$799', u: 'al mes', n: ['Primer mes $599 con cualquier tarjeta', 'Sin permanencia forzosa'] }],
+    ['s', '¿Hay algo para pagar todo el año de una vez?', 'inf-s3'],
+    ['a', 'Sí, la mensualidad adelantada: pagas 8 meses y te regalamos 4. Son $5,799 por un año completo, y lo puedes diferir hasta 9 meses sin intereses.', 'inf-a3'],
+    ['c', { t: 'Mensualidad adelantada', p: '$5,799', u: 'por 12 meses', n: ['Pagas 8 meses y te regalamos 4', 'Hasta 9 meses sin intereses (algunas tarjetas, 6)'] }],
+    ['s', 'Perfecto, me late el Flex.', 'inf-s4'],
+    ['a', '¡Buena elección! Si quieres, te inscribo ahora mismo y te mando tu link de pago.', 'inf-a4']
+  ]},
+  { id: 'inscripcion', title: 'Inscripción', sub: 'Socia nueva en Premium 2', lines: [
+    ['s', 'Hola, quiero inscribirme en el Premium 2.', 'ins-s1'],
+    ['a', '¡Qué gusto! ¿Vas a domiciliar tarjeta de crédito o de débito? Con crédito, tu primer mes es gratis y la inscripción va al 50%, así que hoy pagas solo $249.', 'ins-a1'],
+    ['s', 'De crédito.', 'ins-s2'],
+    ['a', 'Perfecto. Te comento que Premium 2 tiene permanencia de 12 meses. Para tu registro, ¿me das tu nombre completo y tu correo?', 'ins-a2'],
+    ['s', 'Ana López, ana.lopez@correo.com.', 'ins-s3'],
+    ['a', 'Gracias, Ana. Te confirmo: Premium 2 con tarjeta de crédito; hoy pagas $249 y a partir del segundo mes, $699. ¿Es correcto?', 'ins-a3'],
+    ['s', 'Sí, correcto.', 'ins-s4'],
+    ['x', 'Creando socia en el CRM', 'Socia registrada: Ana López'],
+    ['x', 'Generando link de pago', 'Link de $249 enviado por WhatsApp'],
+    ['a', 'Listo, Ana. Te envié tu link de pago por WhatsApp. En cuanto se confirme, tu acceso queda activo y puedes entrenar hoy mismo.', 'ins-a4']
+  ]},
+  { id: 'bloqueo', title: 'Acceso bloqueado', sub: 'Motivo y link de pago', lines: [
+    ['s', 'Hola, intenté entrar a la sucursal y no me dejó pasar.', 'blo-s1'],
+    ['a', 'Hola, con gusto lo reviso. ¿Me compartes el teléfono con el que te registraste?', 'blo-a1'],
+    ['s', 'Es el 81 2345 6789.', 'blo-s2'],
+    ['x', 'Buscando socio en el CRM', 'Socio encontrado: Carlos Méndez'],
+    ['a', 'Gracias, Carlos. Ya tengo tu cuenta. Tu acceso está en pausa porque el cargo de este mes no se pudo hacer a tu tarjeta.', 'blo-a2'],
+    ['s', 'Ah, cambié de tarjeta. ¿Cómo lo arreglo?', 'blo-s3'],
+    ['a', 'Te envío ahora mismo un link de pago seguro por WhatsApp. En cuanto se confirme el pago, tu acceso se libera solo.', 'blo-a3'],
+    ['x', 'Generando link de pago', 'Link de $699 enviado al 81 2345 6789'],
+    ['s', 'Ya me llegó, gracias.', 'blo-s4'],
+    ['a', 'De nada, Carlos. ¿Te ayudo con algo más?', 'blo-a4']
+  ]},
+  { id: 'renovacion', title: 'Renovación', sub: 'Anualidad con promoción', lines: [
+    ['s', 'Hola, mi anualidad está por terminar. ¿Cómo la renuevo?', 'ren-s1'],
+    ['x', 'Consultando la membresía en el CRM', 'Anualidad vigente hasta el 30 de noviembre'],
+    ['a', 'Hola, Sofía. Tu anualidad termina el 30 de noviembre. Ahorita la renovación tiene promoción: $5,599 por otro año, hasta 9 meses sin intereses, y te regalamos un mes extra.', 'ren-a1'],
+    ['c', { t: 'Renovación anual', p: '$5,599', u: '12 meses + 1 de regalo', n: ['Hasta 9 meses sin intereses', 'Al terminar, sigue la mensualidad de $699 o vuelves a renovar'] }],
+    ['s', '¿Y sigo necesitando dejar tarjeta?', 'ren-s2'],
+    ['a', 'Sí, es un requisito porque nuestros planes son mensuales. Al terminar tu año empieza la mensualidad de $699, pero puedes volver a renovar o cancelar unos días antes, sin penalización.', 'ren-a2'],
+    ['s', 'Va, renuévala.', 'ren-s3'],
+    ['x', 'Generando link de pago', 'Link de $5,599 enviado por WhatsApp'],
+    ['a', 'Listo, Sofía. Ya tienes tu link en WhatsApp. En cuanto se confirme el pago, tu membresía se extiende un año más, con tu mes de regalo.', 'ren-a3']
+  ]},
+  { id: 'prospecto', title: 'Prospecto', sub: 'Todavía no decide', lines: [
+    ['s', 'Hola, estoy viendo opciones de gimnasio, todavía no me decido.', 'pro-s1'],
+    ['a', 'Claro, sin compromiso. ¿Te gustaría que alguien de la sucursal te contacte para contarte de los planes y enseñarte las instalaciones?', 'pro-a1'],
+    ['s', 'Sí, me parece bien.', 'pro-s2'],
+    ['a', '¿Me compartes tu nombre, tu teléfono y qué zona te queda mejor?', 'pro-a2'],
+    ['s', 'Luis Treviño, 81 9876 5432, por el centro.', 'pro-s3'],
+    ['x', 'Registrando prospecto en el CRM', 'Prospecto registrado'],
+    ['a', 'Gracias, Luis. Ya quedó tu registro y pronto te contactan. Si antes tienes alguna duda, aquí estoy a cualquier hora.', 'pro-a3']
+  ]}
+];
+
+const CHAT = [
+  ['out', 'Hola, ¿cuándo vence mi membresía?'],
+  ['in', 'Hola, Mariana. Tu membresía vence el 15 de noviembre.'],
+  ['in', 'Ahorita la renovación anual está en $5,599, hasta 9 meses sin intereses y con un mes de regalo. ¿Te envío tu link de pago?'],
+  ['out', 'Sí, porfa.'],
+  ['in', 'Aquí lo tienes:<div class="paycard"><b>Renovación anual: $5,599</b><span>Hasta 9 meses sin intereses, Station 24 Fitness</span><em>Pagar ahora</em></div>'],
+  ['in', 'En cuanto se confirme el pago, tu membresía se extiende un año más, con tu mes de regalo.'],
+  ['out', '¡Gracias, Stacy!']
+];
+
+const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="#3DDC84" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+const CALL_AUDIO = f => 'audio/calls/' + f + '.mp3';
+const demoEl = $('#demo'), body = $('#demoBody'), prog = $('#prog'), timerEl = $('#timer');
+const demoTok = { v: 0 };
+let mode = 'menu', timerInt = null;
+
+function setTimer(on) {
+  clearInterval(timerInt); timerEl.textContent = '';
+  if (!on) return;
+  const st = Date.now(); timerEl.textContent = '00:00';
+  timerInt = setInterval(() => { const s = Math.floor((Date.now() - st) / 1000);
+    timerEl.textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }, 500);
+}
+const setProg = p => prog.style.width = (p * 100).toFixed(1) + '%';
+
+function playClip(file, tok, onProg, estMs) {
+  return new Promise(resolve => {
+    let done = false, rf = 0;
+    const fin = ok => { if (done) return; done = true; cancelAnimationFrame(rf); callAudio.onended = null; resolve(ok); };
+    const simulate = () => {
+      const st = performance.now();
+      const sim = () => {
+        if (demoTok.v !== tok) return fin(false);
+        const p = (performance.now() - st) / estMs; onProg(Math.min(1, p));
+        if (p >= 1) return fin(true);
+        rf = requestAnimationFrame(sim);
+      };
+      sim();
+    };
+    const step = () => {
+      if (demoTok.v !== tok) { callAudio.pause(); return fin(false); }
+      const d = callAudio.duration || estMs / 1000;
+      onProg(Math.min(1, callAudio.currentTime / d));
+      rf = requestAnimationFrame(step);
+    };
+    callMeter.peak = 0;
+    callAudio.onended = () => { onProg(1); fin(true); };
+    callAudio.src = CALL_AUDIO(file);
+    callAudio.play().then(step).catch(simulate);
+  });
+}
+
+const cardHTML = c => `<b>${c.t}</b><div class="pr">${c.p}<small>${c.u}</small></div><ul>${c.n.map(x => `<li>${x}</li>`).join('')}</ul>`;
+
+async function runCall(sc, tok) {
+  $('#demoKind').textContent = 'Llamada en curso';
+  body.innerHTML = '<div class="transcript" id="tr"></div>';
+  const tr = $('#tr');
+  setTimer(true);
+  const add = (cls, html) => { const d = document.createElement('div'); d.className = cls; d.innerHTML = html; tr.appendChild(d); tr.scrollTop = tr.scrollHeight; return d; };
+  const total = sc.lines.length;
+  for (let li = 0; li < total; li++) {
+    const [who, a, b] = sc.lines[li];
+    if (demoTok.v !== tok) return false;
+    setProg(li / total);
+    if (who === 's') {
+      if (!await wait(300, tok, demoTok)) return false;
+      const d = add('l-socio talking', '<span class="sr">Socio: </span>' + a);
+      const ok = await playClip(b, tok, () => {}, 700 + a.length * 55);
+      d.classList.remove('talking');
+      if (!ok) return false;
+    } else if (who === 'a') {
+      if (!await wait(250, tok, demoTok)) return false;
+      const words = a.split(' ');
+      const d = add('l-stacy', words.map(w => `<span class="w">${w}</span>`).join(' '));
+      const ws = d.querySelectorAll('.w');
+      callStacy = true; heroOrb.speaking = true;
+      const ok = await playClip(b, tok, p => {
+        const cnt = Math.ceil(p * ws.length);
+        ws.forEach((w, k) => w.classList.toggle('in', k < cnt));
+        tr.scrollTop = tr.scrollHeight;
+      }, 600 + a.length * 60);
+      callStacy = false; heroOrb.speaking = false;
+      if (!ok) return false;
+    } else if (who === 'c') {
+      add('l-card', cardHTML(a));
+      if (!await wait(800, tok, demoTok)) return false;
+    } else {
+      const d = add('l-sys', `<span class="spin"></span><span>${a}</span>`);
+      if (!await wait(1200, tok, demoTok)) return false;
+      d.classList.add('done'); d.innerHTML = CHECK + `<span>${b}</span>`;
+      if (!await wait(450, tok, demoTok)) return false;
+    }
+  }
+  setProg(1); setTimer(false); $('#demoKind').textContent = 'Llamada terminada';
+  return true;
+}
+
+async function runChat(tok) {
+  $('#demoKind').textContent = 'Conversación por chat';
+  body.innerHTML = `<div class="chat-head"><span class="avatar"><svg viewBox="-4 -4 108 80" aria-hidden="true"><path d="${SD}"/></svg></span><div><b>Stacy</b><span>en línea</span></div></div><div class="chat-body" id="chat"></div>`;
+  const chat = $('#chat');
+  for (let i = 0; i < CHAT.length; i++) {
+    const [k, html] = CHAT[i];
+    setProg(i / CHAT.length);
+    if (k === 'in') {
+      const ty = document.createElement('div'); ty.className = 'typing'; ty.innerHTML = '<i></i><i></i><i></i>';
+      chat.appendChild(ty); chat.scrollTop = chat.scrollHeight;
+      heroOrb.speaking = true;
+      if (!await wait(RM ? 0 : 1100, tok, demoTok)) { heroOrb.speaking = false; return false; }
+      heroOrb.speaking = false; ty.remove();
+    } else if (!await wait(RM ? 0 : 900, tok, demoTok)) return false;
+    const m = document.createElement('div'); m.className = 'msg ' + k; m.innerHTML = html; chat.appendChild(m);
+    chat.scrollTop = chat.scrollHeight;
+    if (!await wait(RM ? 0 : 500, tok, demoTok)) return false;
+  }
+  setProg(1);
+  return true;
+}
+
+async function runTraining(tok) {
+  $('#demoKind').textContent = 'Para el equipo operativo';
+  body.innerHTML = `<div class="tr" id="trn"></div>`;
+  const trn = $('#trn');
+  const add = (cls, html) => { const d = document.createElement('div'); d.className = cls; d.innerHTML = html; trn.appendChild(d); trn.scrollTop = trn.scrollHeight; return d; };
+  add('tr-intro', '<div class="logo-slot">Aquí va el logo del proyecto</div><p><strong>Training STATIONers</strong> reemplazará a WikiStation. En lugar de buscar entre páginas, el equipo me pregunta y le respondo paso a paso. Adentro también vive <strong>EvoSchool</strong>.</p>');
+  setProg(0.15);
+  if (!await wait(1400, tok, demoTok)) return false;
+  const QS = ['¿Cómo doy de alta a un socio nuevo en EVO?', '¿Dónde encuentro mi curso de EvoSchool?'];
+  const ANS = [
+    'Te llevo paso a paso por el alta en EVO, con el proceso oficial de Station, y te aviso qué datos necesitas antes de empezar.',
+    'Te paso directo a tu curso en EvoSchool y te digo qué módulo te toca según tu puesto.'
+  ];
+  for (let q = 0; q < QS.length; q++) {
+    const box = add('ask-box', '<span class="qt"></span><span class="caret"></span>');
+    const qt = box.querySelector('.qt');
+    for (let c = 1; c <= QS[q].length; c++) { qt.textContent = QS[q].slice(0, c); if (!await wait(RM ? 0 : 38, tok, demoTok)) return false; }
+    box.querySelector('.caret').remove();
+    setProg(0.3 + q * 0.35);
+    if (!await wait(500, tok, demoTok)) return false;
+    const words = ANS[q].split(' ');
+    const d = add('l-stacy', words.map(w => `<span class="w">${w}</span>`).join(' '));
+    const ws = d.querySelectorAll('.w');
+    heroOrb.speaking = true;
+    for (let k = 0; k < ws.length; k++) { ws[k].classList.add('in'); if (!await wait(RM ? 0 : 70 + words[k].length * 30, tok, demoTok)) { heroOrb.speaking = false; return false; } }
+    heroOrb.speaking = false;
+    if (!await wait(900, tok, demoTok)) return false;
+  }
+  add('tag', 'Las respuestas saldrán de los procesos oficiales de Station');
+  setProg(1);
+  return true;
+}
+
+async function openDemo(id) {
+  const cap = CAPS.find(c => c.id === id); if (!cap) return;
+  if (playing) stopIntro(true);
+  if (getCtx()) { callMeter.setup(); if (actx.state === 'suspended') actx.resume().catch(() => {}); }
+  const tok = ++demoTok.v;
+  try { callAudio.pause(); } catch (e) {}
+  mode = 'demo'; orbit.target = 1; orbit.hover = null;
+  document.body.classList.add('demo-on'); invite(false); hint.classList.remove('show');
+  highlight(id); setMark(heroOrb, id);
+  $('#demoTitle').textContent = cap.t; $('#demoKind').textContent = ''; body.innerHTML = ''; setProg(0); setTimer(false);
+  if (!await wait(RM ? 0 : 900, tok, demoTok)) return;
+  let ok;
+  if (cap.kind === 'call') ok = await runCall(SCENARIOS.find(s => s.id === cap.sc), tok);
+  else if (cap.kind === 'chat') ok = await runChat(tok);
+  else ok = await runTraining(tok);
+  if (!ok) return;
+  $('#close').textContent = 'Volver al menú';
+  if (await wait(3200, tok, demoTok)) closeDemo();
+}
+function closeDemo() {
+  demoTok.v++;
+  try { callAudio.pause(); } catch (e) {}
+  callStacy = false; heroOrb.speaking = false; setTimer(false);
+  mode = 'menu'; orbit.target = 0;
+  document.body.classList.remove('demo-on');
+  $('#close').textContent = 'Volver';
+  highlight(null); setMark(heroOrb, 's');
+  heard = true; menuHint();
+}
+$('#close').addEventListener('click', closeDemo);
+addEventListener('keydown', e => { if (e.key === 'Escape' && mode === 'demo') closeDemo(); });
+
+/* ---------- Arranque ---------- */
+function wake() {
+  layout();
+  if (RM) { heroOrb.awake = true; document.body.classList.add('awake'); orbit.deploy = 0; menuHint(); return; }
+  heroOrb.wakeStart = performance.now();
+  setTimeout(() => document.body.classList.add('awake'), 1800);
+  setTimeout(() => orbit.deploy = performance.now(), 2300);
+  setTimeout(() => { if (!playing && mode === 'menu') { hint.textContent = 'Toca el círculo para escucharme.'; hint.classList.add('show'); } }, 3600);
+}
+let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(layout, 120); });
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(wake);
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
