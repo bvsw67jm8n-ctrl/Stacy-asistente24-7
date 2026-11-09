@@ -28,8 +28,8 @@ button{font-family:inherit}
 .cap{all:unset;position:relative;display:block;width:0;height:0;cursor:pointer;pointer-events:auto}
 .demo-on .cap{pointer-events:none}
 .dot{position:absolute;left:-8px;top:-8px;width:16px;height:16px;border-radius:50%;background:#000;border:2px solid var(--o);transition:background .3s,box-shadow .3s,transform .3s}
-.lbl{position:absolute;left:0;top:0;width:max-content;max-width:220px;
-  transform:translate(calc(-50% + var(--c,0) * 50% + var(--c,0) * 22px),-50%)}
+.lbl{position:absolute;left:0;top:0;width:max-content;max-width:var(--mw,220px);
+  transform:translate(calc(-50% + var(--c,0) * 50% + var(--c,0) * var(--off,22px)),-50%)}
 [data-side="-1"] .lbl{text-align:right}
 [data-side="1"] .lbl{text-align:left}
 .cap-t{display:block;color:#fff;font-weight:800;font-size:19px;font-stretch:104%;line-height:1.15}
@@ -147,17 +147,13 @@ h1.saying{text-shadow:0 0 28px rgba(228,86,4,.65)}
 @media (max-width:819px){
   .top{padding:18px 20px}
   .top img{width:120px}
-  .caps{display:none}
-  .hello{position:absolute;left:0;right:0;transform:none;width:auto;bottom:auto;top:340px;padding:0 20px}
-  .stage{min-height:92px}
-  h1{font-size:40px;white-space:normal}
+  .cap-t{font-size:15px;font-stretch:80%;line-height:1.12}
+  .cap-d{display:none}
+  .dot{left:-7px;top:-7px;width:14px;height:14px}
+  .hello{position:absolute;left:0;right:0;transform:none;width:auto;bottom:auto;padding:0 20px}
+  .stage{min-height:84px}
+  h1{font-size:clamp(34px,10vw,44px);white-space:normal}
   .hint{font-size:16px;margin-top:10px}
-  .caps-m{display:grid;list-style:none;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px;text-align:left}
-  .caps-m button{all:unset;box-sizing:border-box;width:100%;height:100%;cursor:pointer;display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#0d0d0d}
-  .caps-m .dot{position:static;flex:none;width:12px;height:12px}
-  .caps-m .cap-t{font-size:15px}
-  .caps-m .on .dot{background:var(--o);box-shadow:0 0 18px rgba(228,86,4,.8)}
-  .caps-m .on .cap-t{color:var(--o2)}
   .demo{left:12px;right:12px;top:220px;bottom:12px;max-width:none}
   .demo-top{padding:16px 16px 12px 22px}
   .demo-title{font-size:20px}
@@ -165,10 +161,6 @@ h1.saying{text-shadow:0 0 28px rgba(228,86,4,.65)}
   .transcript{padding:18px 16px}
   .note{left:20px;right:20px;text-align:center;bottom:10px;font-size:13px}
   .demo-on .note{opacity:0}
-}
-@media (max-width:819px) and (max-height:740px){
-  .hello{top:300px}
-  .caps-m{gap:8px;margin-top:14px}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;transition-delay:0ms!important}
@@ -375,7 +367,7 @@ $('#capsM').innerHTML = CAPS.map((c, i) => `<li data-id="${c.id}" style="--i:${i
 const nodes = [...capsEl.children].map((li, i) => ({ li, btn: li.firstElementChild, id: CAPS[i].id }));
 
 const heroOrb = makeOrb($('#orb'));
-const orbit = { hover: null, deploy: null, last: 0, rot: 0, gap: 120, spacing: 90, burst: { id: null, t: 0 }, m: 0, target: 0, menu: null, demo: null, panelX: 0 };
+const orbit = { stub: 34, yk: 0.5, off: 22, hover: null, deploy: null, last: 0, rot: 0, gap: 120, spacing: 90, burst: { id: null, t: 0 }, m: 0, target: 0, menu: null, demo: null, panelX: 0 };
 let active = null, wide = true;
 
 function layout() {
@@ -394,9 +386,21 @@ function layout() {
     const dR = Math.max(48, Math.min(R, panelLeft / 2 / 2.6));
     orbit.demo = { cx: panelLeft / 2, cy: h / 2 + 10, R: dR };
     orbit.panelX = panelLeft;
+    orbit.stub = 34; orbit.yk = 0.5; orbit.off = 22;
+    capsEl.style.setProperty('--mw', '220px'); capsEl.style.setProperty('--off', '22px');
+    $('.hello').style.top = '';
   } else {
-    const R = Math.min(56, (h - 0) * 0.07);
-    orbit.menu = { cx: w / 2, cy: Math.min(205, h * 0.25), R };
+    // Mismo diseño en celular: círculo al centro y habilidades a los lados, más compactas
+    const R = Math.max(28, Math.min(52, w * 0.078));
+    orbit.spacing = Math.max(52, Math.min(70, h * 0.072));
+    const cy = Math.max(170, Math.min(h * 0.37, h - 430));
+    orbit.menu = { cx: w / 2, cy, R };
+    orbit.gap = -14; orbit.stub = 12; orbit.yk = 0.72; orbit.off = 14;
+    const dotGap = R * 2.22 + orbit.gap + 40;
+    capsEl.style.setProperty('--mw', Math.max(60, w / 2 - dotGap - orbit.off - 10) + 'px');
+    capsEl.style.setProperty('--off', orbit.off + 'px');
+    const half = Math.max(R * 2.45, 1.5 * orbit.spacing + 30);
+    $('.hello').style.top = (cy + half + 18) + 'px';
     orbit.demo = { cx: w / 2, cy: 128, R: 36 };
     orbit.panelX = 0;
   }
@@ -499,7 +503,6 @@ heroOrb.before = (ctx, t) => {
     ctx.beginPath(); ctx.arc(cx, cy, Rr, -0.2, 0.2); ctx.stroke();
     ctx.restore();
   }
-  if (!wide) return;
   const show = 1 - M;
   nodes.forEach((nd, i) => {
     const side = i < LEFT ? -1 : 1, j = i < LEFT ? i : i - LEFT, n = i < LEFT ? LEFT : nodes.length - LEFT;
@@ -508,11 +511,13 @@ heroOrb.before = (ctx, t) => {
     const float = RM ? 0 : 3.5 * Math.sin(t * 0.0011 + i * 1.7);
     const yL = cy + (j - (n - 1) / 2) * orbit.spacing + float;
     const dotX = cx + side * (Rr + orbit.gap + 40);
-    const y0 = cy + (yL - cy) * 0.5;
+    const y0 = cy + (yL - cy) * orbit.yk;
     const x0 = cx + side * Math.sqrt(Math.max(0, Rr * Rr - (y0 - cy) ** 2));
     const dy = Math.abs(yL - y0);
-    const xd = dotX - side * 34;
-    const pts = [[x0, y0], [xd - side * dy, y0], [xd, yL], [dotX - side * 10, yL]];
+    const xd = dotX - side * orbit.stub;
+    let bx = xd - side * dy;
+    if (side * (bx - x0) > 0) bx = x0;      // si no cabe la diagonal a 45°, sale directo del anillo
+    const pts = [[x0, y0], [bx, y0], [xd, yL], [dotX - side * 10, yL]];
     nd.li.style.transform = `translate3d(${dotX.toFixed(1)}px,${yL.toFixed(1)}px,0)`;
     nd.li.style.opacity = (Math.max(0, (d0 - 0.75) / 0.25) * show * show).toFixed(3);
     nd.li.dataset.side = side;
@@ -590,7 +595,7 @@ function getCtx() {
 function meter(el) {
   const m = { an: null, buf: null, peak: 0 };
   m.setup = () => {
-    if (m.an || !getCtx()) return;
+    if (m.an || IOS || !getCtx()) return;
     try { const src = actx.createMediaElementSource(el); m.an = actx.createAnalyser(); m.an.fftSize = 512; src.connect(m.an); m.an.connect(actx.destination); m.buf = new Uint8Array(512); } catch (e) { m.an = null; }
   };
   m.level = () => {
@@ -604,8 +609,24 @@ function meter(el) {
   };
   return m;
 }
-const audio = new Audio(AUDIO_URL); audio.preload = 'auto';
-const callAudio = new Audio(); callAudio.preload = 'auto';
+const audio = new Audio(AUDIO_URL); audio.preload = 'auto'; audio.setAttribute('playsinline', '');
+const callAudio = new Audio(); callAudio.preload = 'auto'; callAudio.setAttribute('playsinline', '');
+// En iPhone/iPad el análisis de la voz puede silenciar el audio; ahí el orbe usa el modo simulado.
+const IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+// Activa el sonido dentro del mismo toque del usuario (requisito de los navegadores móviles).
+function primeCtx() {
+  if (IOS || !getCtx()) return false;
+  if (actx.state === 'suspended') actx.resume().catch(() => {});
+  return true;
+}
+function unlockCallAudio(firstFile) {
+  callAudio._want = false;
+  callAudio.src = 'audio/calls/' + firstFile + '.mp3';
+  callAudio.muted = true;
+  const p = callAudio.play();
+  if (p) p.then(() => { if (!callAudio._want) { callAudio.pause(); callAudio.muted = false; } })
+           .catch(() => { callAudio.muted = false; });
+}
 const introMeter = meter(audio), callMeter = meter(callAudio);
 let playing = false, callStacy = false;
 heroOrb.level = () => playing ? introMeter.level() : callStacy ? callMeter.level() : null;
@@ -660,12 +681,12 @@ async function startIntro() {
   playing = true; seg = -1; introMeter.peak = 0;
   hint.classList.remove('show'); invite(false);
   useAudio = true;
-  try {
-    introMeter.setup();
-    if (actx && actx.state === 'suspended') await actx.resume();
-    audio.currentTime = 0;
-    await audio.play();
-  } catch (e) { useAudio = false; t0 = performance.now(); }
+  // play() va primero y sin esperas, para que el celular lo cuente como parte del toque
+  try { audio.currentTime = 0; } catch (e) {}
+  audio.muted = false;
+  const p = audio.play();
+  if (primeCtx()) introMeter.setup();
+  try { await p; } catch (e) { useAudio = false; t0 = performance.now(); }
   tick();
 }
 function stopIntro(quiet) {
@@ -796,6 +817,7 @@ function playClip(file, tok, onProg, estMs) {
       rf = requestAnimationFrame(step);
     };
     callMeter.peak = 0;
+    callAudio._want = true; callAudio.muted = false;
     callAudio.onended = () => { onProg(1); fin(true); };
     callAudio.src = CALL_AUDIO(file);
     callAudio.play().then(step).catch(simulate);
@@ -906,9 +928,11 @@ async function runTraining(tok) {
 async function openDemo(id) {
   const cap = CAPS.find(c => c.id === id); if (!cap) return;
   if (playing) stopIntro(true);
-  if (getCtx()) { callMeter.setup(); if (actx.state === 'suspended') actx.resume().catch(() => {}); }
   const tok = ++demoTok.v;
   try { callAudio.pause(); } catch (e) {}
+  // Desbloquea el reproductor de llamadas en este mismo toque
+  if (cap.kind === 'call') { const sc = SCENARIOS.find(x => x.id === cap.sc); const first = sc.lines.find(l => l[2]); if (first) unlockCallAudio(first[2]); }
+  if (primeCtx()) callMeter.setup();
   mode = 'demo'; orbit.target = 1; orbit.hover = null;
   document.body.classList.add('demo-on'); invite(false); hint.classList.remove('show');
   highlight(id); setMark(heroOrb, id);
